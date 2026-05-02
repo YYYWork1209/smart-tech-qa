@@ -1,3 +1,22 @@
 spring:
   application:
     name: spring-ai
+  ai:
+    openai:
+      api-key: ${ALIYUN_API_KEY}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      chat:
+        options:
+          model: qwen-turbo
+          temperature: 0.8
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model:
+          temperature: 0.8
+
+logging:
+  level:
+    com.ai.springai: debug
+    org.springframework.ai.chat.client.advisor: debug
