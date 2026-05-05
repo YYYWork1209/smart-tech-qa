@@ -1,6 +1,8 @@
 package com.ai.springai.controller;
 
 
+import com.ai.springai.enums.SessionType;
+import com.ai.springai.enums.SystemPromptEnums;
 import com.ai.springai.repository.ChatHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,8 @@ public class ChatController {
 
     private final ChatClient chatClient;
 
+    private final ChatClient serviceClient;
+
     private final ChatHistoryRepository chatHistoryRepository;
 
     // 这里前端并不会处理sse格式的数据所以只能先使用text/html
@@ -31,7 +35,7 @@ public class ChatController {
         log.info("请求接收成功：等待大模型返回结果...");
 
         //把会话id保存起来，下次页面左边会展示出来之前的会话记录
-        chatHistoryRepository.saveChatHistory("chat",chatId);
+        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.CHAT),chatId);
 
         return chatClient.prompt()
                 .advisors(advisorSpec -> {
@@ -40,6 +44,23 @@ public class ChatController {
                 .user(userMessage)
                 .stream()
                 .content();
+    }
+
+    @GetMapping(value = "/service",produces = "text/html;charset=UTF-8")
+    public Flux<String> serviceChat(@RequestParam("prompt") String userPrompt,
+                                    @RequestParam("chatId") String chatId){
+
+        //把会话id保存起来，下次页面左边会展示出来之前的会话记录
+        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.SERVICE),chatId);
+
+        return serviceClient.prompt()
+                .advisors(advisorSpec -> {
+                    advisorSpec.param(ChatMemory.CONVERSATION_ID,chatId);
+                })
+                .user(userPrompt)
+                .stream()
+                .content();
+
     }
 
 }

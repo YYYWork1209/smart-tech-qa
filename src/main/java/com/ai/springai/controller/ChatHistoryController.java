@@ -2,13 +2,11 @@ package com.ai.springai.controller;
 
 
 import com.ai.springai.repository.ChatHistoryRepository;
-import com.ai.springai.vo.MessageVO;
-import lombok.Getter;
+import com.ai.springai.entity.vo.MessageVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

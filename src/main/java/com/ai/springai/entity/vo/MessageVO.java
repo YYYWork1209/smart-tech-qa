@@ -1,11 +1,10 @@
-package com.ai.springai.vo;
+package com.ai.springai.entity.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.MessageType;
 
 /**
  * 用来存储会话历史内容，返回给前端
