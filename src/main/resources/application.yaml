@@ -1,6 +1,11 @@
 spring:
   application:
     name: spring-ai
+  data:
+    redis:
+      url: 192.168.59.133:6379
+      database: 0
+      timeout: 10s
   ai:
     openai:
       api-key: ${ALIYUN_API_KEY}
@@ -9,12 +14,21 @@ spring:
         options:
           model: qwen3-max
           temperature: 0.8
+      embedding: # 向量模型
+        options:
+          model: text-embedding-v3
+          dimensions: 768  # 1024维向量
     ollama:
       base-url: http://localhost:11434
       chat:
         options:
           model:
           temperature: 0.8
+    vectorstore:  # 向量数据库
+      redis:
+        initialize-schema: true  # 初始化向量数据库,作用是创建索引，确保向量数据库正常运行
+        index-name: java-index  # 自定义向量数据库索引名称，默认值为vectorstore
+        prefix: notes  # 自定义向量数据库前缀 ，默认值为vectorstore:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/itheima?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowPublicKeyRetrieval=true&allowMultiQueries=true&useServerPrepStmts=false

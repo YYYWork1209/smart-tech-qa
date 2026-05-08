@@ -2,22 +2,42 @@ package com.ai.springai.config;
 
 import com.ai.springai.enums.SystemPromptEnums;
 import com.ai.springai.tools.CourseTools;
+import org.apache.ibatis.javassist.Loader;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CommonConfiguration {
 
+    /**
+     *
+     * @return
+     */
     @Bean
     public ChatMemory chatMemory(){
         return MessageWindowChatMemory.builder().build();
     }
+
+    /**
+     *  <p>注意，VectorStore操作向量化的基本单位是Document，我们在使用时需要将自己的知识库分割转换为一个个的Document，然后写入VectorStore.</>
+     * @param embeddingModel
+     * @return
+     */
+    @Bean
+    public VectorStore vectorStore(OpenAiEmbeddingModel embeddingModel) {
+        return SimpleVectorStore.builder(embeddingModel).build();
+    }
+
 
     /**
      * <p>创建 ChatClient，聊天客户端，通过他与大模型发送请求</p>
@@ -49,12 +69,27 @@ public class CommonConfiguration {
         return ChatClient.builder(openAiChatModel) // 创建聊天客户端，包含大模型配置
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(), // 添加日志记录器，用于记录请求和响应
-                        MessageChatMemoryAdvisor.builder(chatMemory()).build()  // 添加消息内存顾问，用于管理聊天历史
+                        MessageChatMemoryAdvisor.builder(chatMemory()).build() // 添加消息内存顾问，用于管理聊天历史
                 )
                 .defaultSystem(SystemPromptEnums.SERVICE_PROMPT.getSystemPrompt())  // 设置系统提示，用于与大模型交互
                 .defaultTools(courseTools)
                 .build();
     }
+
+    @Bean
+    public ChatClient ragClient(OpenAiChatModel openAiChatModel,OpenAiEmbeddingModel openAiEmbeddingModel){
+
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(
+                        new SimpleLoggerAdvisor(), // 添加日志记录器，用于记录请求和响应
+                        QuestionAnswerAdvisor.builder(vectorStore(openAiEmbeddingModel)).build() // 添加向量存储顾问，用于向量查询
+                )
+                .defaultSystem(SystemPromptEnums.RAG_PROMPT.getSystemPrompt())
+                .build();
+
+    }
+
+
 
 
 
