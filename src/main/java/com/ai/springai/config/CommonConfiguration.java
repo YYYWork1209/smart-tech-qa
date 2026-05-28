@@ -9,6 +9,7 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
@@ -24,8 +25,10 @@ public class CommonConfiguration {
      * @return
      */
     @Bean
-    public ChatMemory chatMemory(){
-        return MessageWindowChatMemory.builder().build();
+    public ChatMemory messageWindowChatMemory(JdbcChatMemoryRepository jdbcChatMemoryRepository){
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(jdbcChatMemoryRepository)   // 使用jdbcChatMemoryRepository来把数据存入MySQL
+                .build();
     }
 
     /**
@@ -34,7 +37,7 @@ public class CommonConfiguration {
      * @return
      */
     @Bean
-    public VectorStore vectorStore(OpenAiEmbeddingModel embeddingModel) {
+    public VectorStore simpleVectorStore(OpenAiEmbeddingModel embeddingModel) {
         return SimpleVectorStore.builder(embeddingModel).build();
     }
 
@@ -47,13 +50,13 @@ public class CommonConfiguration {
      * @return  ChatClient，聊天客户端，用于与大模型交互，发送请求，接收响应等
      */
     @Bean
-    public ChatClient chatClient(OpenAiChatModel openAiChatModel){
+    public ChatClient chatClient(OpenAiChatModel openAiChatModel, MessageWindowChatMemory messageWindowChatMemory){
             return ChatClient.builder(openAiChatModel) // 创建聊天客户端，包含大模型配置
                     .defaultAdvisors(
                             new SimpleLoggerAdvisor(), // 添加日志记录器，用于记录请求和响应
-                            MessageChatMemoryAdvisor.builder(chatMemory()).build()  // 添加消息内存顾问，用于管理聊天历史
+                            MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build()  // 添加消息顾问，用于管理聊天历史
                     )
-                    .defaultSystem("你叫小云")  // 设置系统提示，用于与大模型交互
+//                    .defaultSystem("")  // 设置系统提示，用于与大模型交互
                     .build();
     }
 
@@ -65,11 +68,11 @@ public class CommonConfiguration {
      * @return  ChatClient，聊天客户端，用于与大模型交互，发送请求，接收响应等
      */
     @Bean
-    public ChatClient serviceClient(OpenAiChatModel openAiChatModel, CourseTools courseTools){
+    public ChatClient serviceClient(OpenAiChatModel openAiChatModel, CourseTools courseTools, ChatMemory messageWindowChatMemory){
         return ChatClient.builder(openAiChatModel) // 创建聊天客户端，包含大模型配置
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(), // 添加日志记录器，用于记录请求和响应
-                        MessageChatMemoryAdvisor.builder(chatMemory()).build() // 添加消息内存顾问，用于管理聊天历史
+                        MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build() // 添加消息内存顾问，用于管理聊天历史
                 )
                 .defaultSystem(SystemPromptEnums.SERVICE_PROMPT.getSystemPrompt())  // 设置系统提示，用于与大模型交互
                 .defaultTools(courseTools)
@@ -82,7 +85,7 @@ public class CommonConfiguration {
         return ChatClient.builder(openAiChatModel)
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(), // 添加日志记录器，用于记录请求和响应
-                        QuestionAnswerAdvisor.builder(vectorStore(openAiEmbeddingModel)).build() // 添加向量存储顾问，用于向量查询
+                        QuestionAnswerAdvisor.builder(simpleVectorStore(openAiEmbeddingModel)).build() // 添加向量存储顾问，用于向量查询
                 )
                 .defaultSystem(SystemPromptEnums.RAG_PROMPT.getSystemPrompt())
                 .build();

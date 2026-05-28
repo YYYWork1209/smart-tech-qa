@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * 读取 markdown文件,调用其中的loadMarkDown来把MarkDown文档转换为 Document对象
+ * 读取 markdown文件,调用其中的 loadMarkDown来把 MarkDown文档转换为 Document对象
  */
 @Component
 public class MarkDownReader {
