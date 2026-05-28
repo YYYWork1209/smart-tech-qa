@@ -34,8 +34,8 @@ public class ChatController {
                                 @RequestParam String chatId){
         log.info("请求接收成功：等待大模型返回结果...");
 
-        //把会话id保存起来，下次页面左边会展示出来之前的会话记录这里保存的是 会话类型 该类型下的会话id列表
-        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.CHAT),chatId);
+        //把会话id保存到MySQL数据库，下次页面左边会展示出来之前的会话记录, 会话类型 该类型下的会话id列表
+        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.CHAT),chatId,userMessage);
 
         return chatClient.prompt()
                 .advisors(advisorSpec -> {
@@ -47,17 +47,17 @@ public class ChatController {
     }
 
     @GetMapping(value = "/service",produces = "text/html;charset=UTF-8")
-    public Flux<String> serviceChat(@RequestParam("prompt") String userPrompt,
+    public Flux<String> serviceChat(@RequestParam("prompt") String userMessage,
                                     @RequestParam("chatId") String chatId){
 
         //把会话id保存起来，下次页面左边会展示出来之前的会话记录
-        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.SERVICE),chatId);
+        chatHistoryRepository.saveChatHistory(String.valueOf(SessionType.SERVICE),chatId,userMessage);
 
         return serviceClient.prompt()
                 .advisors(advisorSpec -> {
                     advisorSpec.param(ChatMemory.CONVERSATION_ID,chatId);
                 })
-                .user(userPrompt)
+                .user(userMessage)
                 .stream()
                 .content();
 

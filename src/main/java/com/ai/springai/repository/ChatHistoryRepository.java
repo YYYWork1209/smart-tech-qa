@@ -9,7 +9,7 @@ public interface ChatHistoryRepository {
      * @param type 聊天记录类型
      * @param chatId 聊天记录id，用于唯一标识一条聊天记录
      */
-    void saveChatHistory(String type,String chatId);
+    void saveChatHistory(String type,String chatId,String userMessage);
 
     /**
      * 用来获取聊天记录，根据 type来获取
